@@ -1,81 +1,65 @@
-import { User } from '../models';
+import { Game } from '../models';
+import ConnectionController from './ConnectionController';
+import LobbyController from './LobbyController';
 
 export default class GameController {
     constructor(socketServer) {
-        this.connectedUsers = [];
         this.runningGames = [];
+
+        this.connection = new ConnectionController();
+        this.lobby = new LobbyController();
 
         this.socket = socketServer;
     }
 
     run() {
-        this.socket.on('connection', socket => {
-            const existingUser = this.getExistingUser(socket.name);
+        this.connection.run(this.socket);
+        this.lobby.run(this.socket, this.connection, this.startGame);
+    }
 
-            let myUser;
+    startGame(players) {
+        const [player0, player1] = this.getPlayerOrder(players);
 
-            if (existingUser)
-                myUser = this.updateExistingUser(socket.name, socket.id);
-            else myUser = this.addUser(socket.id, socket.name);
+        const game = this.createNewGame(player0, player1);
 
-            const userInfo = myUser.info(this.runningGames);
+        this.setPlayersGame(game.id, [player0, player1]);
 
-            this.socket.sendMessage(socket.id, 'user', userInfo);
+        this.sendUserInfo(player0);
+        this.sendUserInfo(player1);
+    }
+
+    getPlayerOrder(players) {
+        const randomNumber = Math.random();
+        const reverse = Boolean(Math.round(randomNumber));
+
+        if (reverse) return players.reverse();
+
+        return players;
+    }
+
+    createNewGame(player0, player1) {
+        const newGameId = this.runningGames.length + 1;
+
+        const game = new Game(newGameId, player0, player1);
+        this.runningGames.push(game);
+
+        return game;
+    }
+
+    setPlayersGame(id, players) {
+        players.forEach(playerId => {
+            const user = this.connection.getUserById(playerId);
+
+            this.connection.updateUserById(playerId, {
+                ...user,
+                gameId: id,
+            });
         });
-
-        this.socket.on('userlist', callback => {
-            const onlineUsers = this.connectedUsers.map(user => ({
-                id: user.id,
-                name: user.name,
-            }));
-
-            callback(onlineUsers);
-        });
-
-        this.socket.on('logout', socket => {
-            const index = this.getUserIndexById(socket);
-
-            this.connectedUsers.splice(index);
-        });
     }
 
-    getExistingUser(name) {
-        const user = this.connectedUsers.find(
-            connectedUser => connectedUser.name === name,
-        );
+    sendUserInfo(id) {
+        const user = this.connection.getUserById(id);
 
-        return Boolean(user);
-    }
-
-    updateExistingUser(name, newId) {
-        const userIndex = this.getUserIndexByName(name);
-
-        userIndex.id = newId;
-
-        this.connectedUsers[userIndex] = userIndex;
-    }
-
-    getUserIndexByName(name) {
-        const userIndex = this.connectedUsers.findIndex(
-            connectedUser => connectedUser.name === name,
-        );
-
-        return userIndex;
-    }
-
-    getUserIndexById(id) {
-        const userIndex = this.connectedUsers.findIndex(
-            connectedUser => connectedUser.id === id,
-        );
-
-        return userIndex;
-    }
-
-    addUser(id, name) {
-        const newUser = new User(id, name);
-
-        this.connectedUsers.push(newUser);
-
-        return newUser;
+        this.socket.sendMessage(id, 'user', user.info(this.runningGames));
     }
 }

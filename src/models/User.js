@@ -8,19 +8,22 @@ export default class User {
 
     info(gameList) {
         const userInfo = {
-            inGame: false,
+            inGame: this.isInGame(),
             gameInvites: this.gameInvites,
         };
 
         if (this.gameId) {
             const game = gameList.find(game => game.id === this.gameId);
 
-            userInfo.inGame = true;
             userInfo.playerTurn = game.playerTurn;
             userInfo.gameBoard = game.gameBoard;
             userInfo.playerType = game.getPlayerType(this.name);
         }
 
         return userInfo;
+    }
+
+    isInGame() {
+        return Boolean(this.gameId);
     }
 }
