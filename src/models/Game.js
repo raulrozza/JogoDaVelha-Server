@@ -10,4 +10,11 @@ export default class Game {
 
         this.playerTurn = 0;
     }
+
+    getPlayerType(name) {
+        if (this.player0 === name) return 0;
+        if (this.player1 === name) return 1;
+
+        return null;
+    }
 }
