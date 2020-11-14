@@ -26,4 +26,13 @@ export default class User {
     isInGame() {
         return Boolean(this.gameId);
     }
+
+    addInvite(name) {
+        this.gameInvites.push(name);
+    }
+
+    removeInvite(name) {
+        const index = this.gameInvites.findIndex(invite => invite === name);
+        this.gameInvites.splice(index);
+    }
 }

@@ -123,31 +123,17 @@ export default class ConnectionController {
         this.connectedUsers.splice(index);
     }
 
-    addInvite(targetName, inviterId) {
-        const inviterName = this.getUserNameById(inviterId);
-        const targetIndex = this.getUserIndexByName(targetName);
+    addInvite(inviterName, targetName) {
+        const target = this.getUserByName(targetName);
 
-        const target = this.connectedUsers[targetIndex];
-
-        target.gameInvites.push(inviterName);
+        target.addInvite(inviterName);
 
         return target.id;
     }
 
-    getUserNameById(id) {
-        const index = this.getUserIndexById(id);
+    removeInvite(name, inviterName) {
+        const user = this.getUserByName(name);
 
-        return this.connectedUsers[index].name;
-    }
-
-    removeInvite(userId, inviterId) {
-        const inviterName = this.getUserNameById(inviterId);
-
-        const user = this.getUserById(userId);
-
-        const inviteIndex = user.gameInvites.findIndex(
-            invite => invite === inviterName,
-        );
-        user.gameInvites.splice(inviteIndex);
+        user.removeInvite(inviterName);
     }
 }

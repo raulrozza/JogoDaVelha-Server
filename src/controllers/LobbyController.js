@@ -1,27 +1,25 @@
 export default class LobbyController {
     run(socket, connection, startGame) {
-        socket.on('invite', emitter => {
-            const targetId = connection.addInvite(
-                emitter.targetName,
-                emitter.inviterId,
-            );
+        socket.on('invite', ({ inviterName, targetName }) => {
+            connection.addInvite(inviterName, targetName);
+            const target = connection.getUserByName(targetName);
 
-            socket.sendMessage(targetId, 'newInvite', {
-                inviterId: emitter.inviterId,
+            socket.sendMessage(target.id, 'newInvite', {
+                inviterName,
             });
         });
 
-        socket.on('refuseInvite', ({ id, inviterId }) => {
-            connection.removeInvite(id, inviterId);
+        socket.on('refuseInvite', ({ name, inviterName }) => {
+            connection.removeInvite(name, inviterName);
         });
 
-        socket.on('acceptInvite', ({ id, inviterId }) => {
-            const user = connection.getUserById(id);
+        socket.on('acceptInvite', ({ name, inviterName }) => {
+            const user = connection.getUserByName(name);
 
             if (user.isInGame())
-                return socket.sendMessage(id, 'userAlreadyInGame');
+                return socket.sendMessage(user.id, 'userAlreadyInGame');
 
-            startGame([id, inviterId]);
+            startGame([name, inviterName]);
         });
     }
 }
