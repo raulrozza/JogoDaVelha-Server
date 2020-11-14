@@ -13,8 +13,23 @@ export default class GameController {
     }
 
     run() {
-        this.connection.run(this.socket);
+        this.connection.run(
+            this.socket,
+            this.runningGames,
+            this.updatePlayerIdInGame,
+        );
         this.lobby.run(this.socket, this.connection, this.startGame);
+
+        this.socket.on('newMove', this.newMove);
+        this.socket.on('endgame', this.endGame);
+    }
+
+    updatePlayerIdInGame(actualId, newId, gameId) {
+        const gameIndex = this.getGameIndexById(gameId);
+
+        const game = this.runningGames[gameIndex];
+
+        this.runningGames[gameIndex] = game;
     }
 
     startGame(players) {
@@ -61,5 +76,68 @@ export default class GameController {
         const user = this.connection.getUserById(id);
 
         this.socket.sendMessage(id, 'user', user.info(this.runningGames));
+    }
+
+    newMove(emitter) {
+        const game = this.getActiveGame(emitter.id);
+
+        game.gameBoard = emitter.gameBoard;
+        game.toggleTurn();
+
+        this.updateGame(game);
+
+        const newGameState = {
+            playerTurn: game.playerTurn,
+            gameBoard: game.gameBoard,
+        };
+
+        this.socket.sendMessage(game.player0, 'newMove', newGameState);
+        this.socket.sendMessage(game.player1, 'newMove', newGameState);
+    }
+
+    getActiveGame(playerId) {
+        const game = this.runningGames.find(
+            game => game.player0 === playerId || game.player1 === playerId,
+        );
+
+        return game;
+    }
+
+    updateGame(game) {
+        const gameIndex = this.getGameIndexById(game.id);
+
+        this.runningGames[gameIndex] = game;
+    }
+
+    getGameIndexById(id) {
+        const gameIndex = this.runningGames.find(game => game.id === id);
+
+        return gameIndex;
+    }
+
+    endGame(emitter) {
+        const game = this.getActiveGame(emitter.id);
+
+        this.removeGame(game);
+
+        const user0 = this.connection.getUserById(game.player0);
+        this.socket.sendMessage(game.player0, 'endgame', {
+            winner: emitter.winner,
+            gameBoard: emitter.gameBoard,
+            user: user0.info(this.runningGames),
+        });
+
+        const user1 = this.connection.getUserById(game.player1);
+        this.socket.sendMessage(game.player0, 'endgame', {
+            winner: emitter.winner,
+            gameBoard: emitter.gameBoard,
+            user: user1.info(this.runningGames),
+        });
+    }
+
+    removeGame(game) {
+        const gameIndex = this.getGameIndexById(game.id);
+
+        this.runningGames.splice(gameIndex);
     }
 }

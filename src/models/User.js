@@ -1,6 +1,6 @@
 export default class User {
     constructor(id, name) {
-        this.id = id || null;
+        this.id = id;
         this.name = name;
         this.gameId = null;
         this.gameInvites = [];

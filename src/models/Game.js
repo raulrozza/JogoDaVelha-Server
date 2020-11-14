@@ -8,7 +8,7 @@ export default class Game {
 
         this.gameBoard = new GameBoard();
 
-        this.playerTurn = 0;
+        this.playerTurn = false;
     }
 
     getPlayerType(name) {
@@ -16,5 +16,9 @@ export default class Game {
         if (this.player1 === name) return 1;
 
         return null;
+    }
+
+    toggleTurn() {
+        this.playerTurn = !this.playerTurn;
     }
 }

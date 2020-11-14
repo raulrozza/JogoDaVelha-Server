@@ -5,81 +5,122 @@ export default class ConnectionController {
         this.connectedUsers = [];
     }
 
-    run(socket) {
+    run(socket, runningGames, updatePlayerIdOnGame) {
         socket.on('connection', emitter => {
-            const existingUser = this.userExists(emitter.name);
+            emitter.on('register', ({ name }) => {
+                const existingUser = this.userExists(name);
 
-            let myUser;
+                let myUser;
 
-            if (existingUser)
-                myUser = this.updateUserId(emitter.name, emitter.id);
-            else myUser = this.addUser(emitter.id, emitter.name);
+                if (existingUser) {
+                    const oldUser = this.getUserByName(name);
 
-            const userInfo = myUser.info(this.runningGames);
+                    myUser = this.updateUserId(name, emitter.id);
 
-            socket.sendMessage(emitter.id, 'user', userInfo);
+                    if (oldUser.isInGame())
+                        updatePlayerIdOnGame(
+                            oldUser.id,
+                            myUser.id,
+                            myUser.gameId,
+                        );
+                } else myUser = this.addUser(emitter.id, name);
+
+                const userInfo = myUser.info(runningGames);
+
+                socket.sendMessage(emitter.id, 'user', userInfo);
+
+                this.sendUserList(socket);
+            });
+
+            emitter.on('disconnect', () => {
+                const user = this.getUserById(emitter.id);
+
+                if (user.isInGame()) this.updateUserId(user.name, null);
+                else this.removeUser(user.name);
+
+                this.sendUserList(socket);
+            });
         });
 
-        socket.on('userlist', callback => {
-            const onlineUsers = this.connectedUsers.map(user => ({
-                id: user.id,
-                name: user.name,
-            }));
-
-            callback(onlineUsers);
-        });
-
-        socket.on('logout', emitter => {
-            const index = this.getUserIndexById(emitter);
+        socket.on('logout', name => {
+            const index = this.getUserIndexByName(name);
 
             this.connectedUsers.splice(index);
         });
     }
 
     userExists(name) {
-        const userIndex = this.getIndexIndexByName(name);
+        const index = this.getUserIndexByName(name);
 
-        return Boolean(userIndex);
-    }
-
-    updateUserId(name, newId) {
-        const userIndex = this.getUserIndexByName(name);
-
-        const user = this.connectedUsers[userIndex];
-
-        user.id = newId;
-
-        this.connectedUsers[userIndex] = user;
-    }
-
-    addUser(id, name) {
-        const newUser = new User(id, name);
-
-        this.connectedUsers.push(newUser);
-
-        return newUser;
+        return Boolean(index);
     }
 
     getUserIndexByName(name) {
-        const userIndex = this.connectedUsers.findIndex(
+        const index = this.connectedUsers.findIndex(
             connectedUser => connectedUser.name === name,
         );
 
-        return userIndex;
+        return index;
+    }
+
+    getUserByName(name) {
+        const userIndex = this.getUserIndexByName(name);
+
+        return this.connectedUsers[userIndex];
+    }
+
+    updateUserId(name, newId) {
+        const index = this.getUserIndexByName(name);
+
+        const user = this.connectedUsers[index];
+
+        user.id = newId;
+
+        this.connectedUsers[index] = user;
+    }
+
+    addUser(id, name) {
+        const user = new User(id, name);
+
+        this.connectedUsers.push(user);
+
+        return user;
+    }
+
+    sendUserList(socket) {
+        const onlineUsers = this.connectedUsers.map(user => ({
+            id: user.id,
+            name: user.name,
+        }));
+
+        socket.emit('userlist', onlineUsers);
+    }
+
+    getUserById(id) {
+        const index = this.getUserIndexById(id);
+        const user = this.connectedUsers[index];
+
+        return user;
     }
 
     getUserIndexById(id) {
-        const userIndex = this.connectedUsers.findIndex(
+        const index = this.connectedUsers.findIndex(
             connectedUser => connectedUser.id === id,
         );
 
-        return userIndex;
+        return index;
     }
 
     updateUserById(id, user) {
-        const userIndex = this.getUserIndexById(id);
+        const index = this.getUserIndexById(id);
 
-        this.connectedUsers[userIndex] = user;
+        this.connectedUsers[index] = user;
+    }
+
+    removeUser(name) {
+        const index = this.getUserIndexById(name);
+
+        this.connectedUsers.splice(index);
     }
 
     addInvite(targetName, inviterId) {
@@ -94,9 +135,9 @@ export default class ConnectionController {
     }
 
     getUserNameById(id) {
-        const userIndex = this.getUserIndexById(id);
+        const index = this.getUserIndexById(id);
 
-        return this.connectedUsers[userIndex].name;
+        return this.connectedUsers[index].name;
     }
 
     removeInvite(userId, inviterId) {
@@ -108,18 +149,5 @@ export default class ConnectionController {
             invite => invite === inviterName,
         );
         user.gameInvites.splice(inviteIndex);
-    }
-
-    getUserById(id) {
-        const userIndex = this.getUserIndexById(id);
-        const user = this.connectedUsers[userIndex];
-
-        return user;
-    }
-
-    getUserByName(name) {
-        const userIndex = this.getUserIndexByName(name);
-
-        return this.connectedUsers[userIndex];
     }
 }
