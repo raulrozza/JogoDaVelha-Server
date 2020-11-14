@@ -1,6 +1,5 @@
 import { Game } from '../models';
-import ConnectionController from './ConnectionController';
-import LobbyController from './LobbyController';
+import { ConnectionController, LobbyController } from './';
 
 export default class GameController {
     constructor(socketServer) {

@@ -1,6 +1,7 @@
 import express from 'express';
 import http from 'http';
-import { GameController, Socket } from './controllers';
+import { GameController } from './controllers';
+import { Socket } from './models';
 
 const app = express();
 const server = http.Server(app);
