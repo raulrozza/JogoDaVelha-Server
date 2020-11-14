@@ -5,7 +5,7 @@ export default class ConnectionController {
         this.connectedUsers = [];
     }
 
-    run(socket, runningGames, updatePlayerIdOnGame) {
+    run(socket, runningGames) {
         socket.on('connection', emitter => {
             emitter.on('register', ({ name }) => {
                 const existingUser = this.userExists(name);
@@ -13,16 +13,7 @@ export default class ConnectionController {
                 let myUser;
 
                 if (existingUser) {
-                    const oldUser = this.getUserByName(name);
-
                     myUser = this.updateUserId(name, emitter.id);
-
-                    if (oldUser.isInGame())
-                        updatePlayerIdOnGame(
-                            oldUser.id,
-                            myUser.id,
-                            myUser.gameId,
-                        );
                 } else myUser = this.addUser(emitter.id, name);
 
                 const userInfo = myUser.info(runningGames);
