@@ -44,4 +44,6 @@ Foram usadas poucas bibliotecas para montar o projeto:
 
 - [Dotenv](https://www.npmjs.com/package/dotenv): Biblioteca usada para carregar variáveis de ambiente. Atualmente, a única variável de ambiente é **PORT**.
 - [Express](https://expressjs.com/pt-br/): Um dos _frameworks_ mais conhecidos para criação expressa de servidores com Node.js.
+- [Nodemon](https://www.npmjs.com/package/nodemon): Biblioteca que facilita o desenvolvimento de aplicações node. Aqui, ele disponibiliza o fast-refresh e também ajuda a registar o Sucrase.
 - [Socket.io](https://socket.io/): Uma famosa biblioteca para gerenciamento de sockets em JavaScript, tanto para servidores quanto para clientes.
+- [Sucrase](https://github.com/alangpierce/sucrase): Transpilador alternativo ao Babel. Utilizado aqui somente para permitir o uso de ES6 modules.
