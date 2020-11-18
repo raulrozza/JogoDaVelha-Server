@@ -2,7 +2,11 @@ import socketio from 'socket.io';
 
 export default class Socket {
     constructor(server) {
-        this.io = socketio(server);
+        this.io = socketio(server, {
+            cors: {
+                origin: '*',
+            },
+        });
     }
 
     on(...args) {

@@ -7,6 +7,12 @@ export default class ConnectionController {
 
     run(socket, runningGames) {
         socket.on('connection', emitter => {
+            console.log(
+                `New user connected. Total of ${Number(
+                    this.connectedUsers.length,
+                )} registered users connected.`,
+            );
+
             emitter.on('register', ({ name }) => {
                 const existingUser = this.userExists(name);
 
@@ -15,6 +21,8 @@ export default class ConnectionController {
                 if (existingUser) {
                     myUser = this.updateUserId(name, emitter.id);
                 } else myUser = this.addUser(emitter.id, name);
+
+                console.log(myUser);
 
                 const userInfo = myUser.info(runningGames);
 
@@ -25,6 +33,8 @@ export default class ConnectionController {
 
             emitter.on('disconnect', () => {
                 const user = this.getUserById(emitter.id);
+
+                if (!user) return;
 
                 if (user.isInGame()) this.updateUserId(user.name, null);
                 else this.removeUser(user.name);
