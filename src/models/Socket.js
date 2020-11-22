@@ -9,6 +9,10 @@ export default class Socket {
         });
     }
 
+    emit(...args) {
+        this.io.emit(...args);
+    }
+
     on(...args) {
         this.io.on(...args);
     }

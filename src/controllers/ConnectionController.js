@@ -14,15 +14,23 @@ export default class ConnectionController {
             );
 
             emitter.on('register', ({ name }) => {
+                console.log(`Registering new user: ${name}.`);
+
                 const existingUser = this.userExists(name);
 
                 let myUser;
 
                 if (existingUser) {
                     myUser = this.updateUserId(name, emitter.id);
-                } else myUser = this.addUser(emitter.id, name);
 
-                console.log(myUser);
+                    console.log(myUser);
+
+                    console.log(`User reconnecting: ${name}.`);
+                } else {
+                    myUser = this.addUser(emitter.id, name);
+
+                    console.log(`Registering new user: ${name}.`);
+                }
 
                 const userInfo = myUser.info(runningGames);
 
@@ -53,7 +61,7 @@ export default class ConnectionController {
     userExists(name) {
         const index = this.getUserIndexByName(name);
 
-        return Boolean(index);
+        return !(index < 0);
     }
 
     getUserIndexByName(name) {
