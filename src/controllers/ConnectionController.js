@@ -5,13 +5,15 @@ export default class ConnectionController {
         this.connectedUsers = [];
     }
 
-    run(socket, runningGames) {
+    run(socket, runningGames, appendEvents) {
         socket.on('connection', emitter => {
             console.log(
                 `New user connected. Total of ${Number(
                     this.connectedUsers.length,
                 )} registered users connected.`,
             );
+
+            this.sendUserList(socket);
 
             emitter.on('register', ({ name }) => {
                 console.log(`Registering new user: ${name}.`);
@@ -22,8 +24,6 @@ export default class ConnectionController {
 
                 if (existingUser) {
                     myUser = this.updateUserId(name, emitter.id);
-
-                    console.log(myUser);
 
                     console.log(`User reconnecting: ${name}.`);
                 } else {
@@ -49,12 +49,16 @@ export default class ConnectionController {
 
                 this.sendUserList(socket);
             });
-        });
 
-        socket.on('logout', name => {
-            const index = this.getUserIndexByName(name);
+            emitter.on('logout', name => {
+                const index = this.getUserIndexByName(name);
 
-            this.connectedUsers.splice(index);
+                this.connectedUsers.splice(index);
+            });
+
+            appendEvents.forEach(event => {
+                emitter.on(event.name, event.callback);
+            });
         });
     }
 
@@ -86,6 +90,8 @@ export default class ConnectionController {
         user.id = newId;
 
         this.connectedUsers[index] = user;
+
+        return user;
     }
 
     addUser(id, name) {

@@ -1,22 +1,23 @@
+import { game, lobby } from '../factories';
 import { Game } from '../models';
-import { ConnectionController, LobbyController } from './';
+import { ConnectionController } from './';
 
 export default class GameController {
     constructor(socketServer) {
         this.runningGames = [];
-
         this.connection = new ConnectionController();
-        this.lobby = new LobbyController();
 
         this.socket = socketServer;
     }
 
     run() {
-        this.connection.run(this.socket, this.runningGames);
-        this.lobby.run(this.socket, this.connection, this.startGame);
+        const lobbyEvents = lobby(this.connection, this.startGame, this.socket);
+        const gameEvents = game(this);
 
-        this.socket.on('newMove', this.newMove);
-        this.socket.on('endgame', this.endGame);
+        this.connection.run(this.socket, this.runningGames, [
+            ...lobbyEvents,
+            ...gameEvents,
+        ]);
     }
 
     startGame(players) {
@@ -65,23 +66,6 @@ export default class GameController {
         this.socket.sendMessage(user.id, 'user', user.info(this.runningGames));
     }
 
-    newMove({ name, gameBoard }) {
-        const game = this.getActiveGame(name);
-
-        game.gameBoard = gameBoard;
-        game.toggleTurn();
-
-        this.updateGame(game);
-
-        const newGameState = {
-            playerTurn: game.playerTurn,
-            gameBoard: game.gameBoard,
-        };
-
-        this.sendNewMove(game.player0, newGameState);
-        this.sendNewMove(game.player1, newGameState);
-    }
-
     getActiveGame(playerName) {
         const game = this.runningGames.find(
             game => game.player0 === playerName || game.player1 === playerName,
@@ -106,20 +90,6 @@ export default class GameController {
         const user = this.connection.getUserByName(playerName);
 
         this.socket.sendMessage(user.id, 'newMove', data);
-    }
-
-    endGame({ name, winner, gameBoard }) {
-        const game = this.getActiveGame(name);
-
-        this.removeGame(game);
-
-        const endgameData = {
-            winner,
-            gameBoard,
-        };
-
-        this.notifyEndGame(game.player0, endgameData);
-        this.notifyEndGame(game.player1, endgameData);
     }
 
     removeGame(game) {
