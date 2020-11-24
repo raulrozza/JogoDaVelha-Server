@@ -18,12 +18,16 @@ export default function lobby(connection, startGame, socket) {
         {
             name: 'refuseInvite',
             callback: ({ name, inviterName }) => {
+                console.log(`${name} refused ${inviterName}'s invite.`);
+
                 connection.removeInvite(name, inviterName);
             },
         },
         {
             name: 'acceptInvite',
             callback: ({ name, inviterName }) => {
+                console.log(`${name} accepted ${inviterName}'s invite.`);
+
                 const user = connection.getUserByName(name);
 
                 if (user.isInGame())

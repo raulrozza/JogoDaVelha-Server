@@ -11,7 +11,11 @@ export default class GameController {
     }
 
     run() {
-        const lobbyEvents = lobby(this.connection, this.startGame, this.socket);
+        const lobbyEvents = lobby(
+            this.connection,
+            this.startGame.bind(this),
+            this.socket,
+        );
         const gameEvents = game(this);
 
         this.connection.run(this.socket, this.runningGames, [
