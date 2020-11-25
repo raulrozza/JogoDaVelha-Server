@@ -1,3 +1,5 @@
+import Game from './Game';
+
 const User = {
     create(id, name) {
         return {
@@ -17,9 +19,15 @@ const User = {
         if (user.gameId) {
             const game = gameList.find(game => game.id === user.gameId);
 
-            userInfo.playerTurn = game.playerTurn;
-            userInfo.gameBoard = game.gameBoard;
-            userInfo.playerType = game.getPlayerType(user.name);
+            if (game) {
+                userInfo.playerTurn = game.playerTurn;
+                userInfo.gameBoard = game.gameBoard;
+                userInfo.playerType = Game.getPlayerType(game, user.name);
+            } else {
+                user.gameId = null;
+
+                userInfo.inGame = User.isInGame(user);
+            }
         }
 
         return userInfo;

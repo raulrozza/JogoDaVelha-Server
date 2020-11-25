@@ -1,3 +1,5 @@
+import { Game } from '../models';
+
 export default function game(gameController) {
     const events = [
         {
@@ -5,8 +7,10 @@ export default function game(gameController) {
             callback: ({ name, gameBoard }) => {
                 const game = gameController.getActiveGame(name);
 
+                console.log(game);
+
                 game.gameBoard = gameBoard;
-                game.toggleTurn();
+                Game.toggleTurn(game);
 
                 gameController.updateGame(game);
 
@@ -20,9 +24,11 @@ export default function game(gameController) {
             },
         },
         {
-            name: 'endGame',
+            name: 'endgame',
             callback: ({ name, winner, gameBoard }) => {
                 const game = gameController.getActiveGame(name);
+
+                console.log(`Game ended! ${name} won.`);
 
                 gameController.removeGame(game);
 

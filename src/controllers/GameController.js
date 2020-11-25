@@ -47,7 +47,7 @@ export default class GameController {
     createNewGame(player0, player1) {
         const newGameId = this.runningGames.length + 1;
 
-        const game = new Game(newGameId, player0, player1);
+        const game = Game.create(newGameId, player0, player1);
         this.runningGames.push(game);
 
         return game;
@@ -85,11 +85,13 @@ export default class GameController {
     updateGame(game) {
         const index = this.getGameIndexById(game.id);
 
+        console.log(game, index, this.runningGames);
+
         this.runningGames[index] = game;
     }
 
     getGameIndexById(id) {
-        const index = this.runningGames.find(game => game.id === id);
+        const index = this.runningGames.findIndex(game => game.id === id);
 
         return index;
     }
