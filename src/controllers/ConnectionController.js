@@ -8,7 +8,7 @@ export default class ConnectionController {
     run(socket, runningGames, appendEvents) {
         socket.on('connection', emitter => {
             console.log(
-                `New user connected. Total of ${Number(
+                `New user connected with id ${emitter.id}. Total of ${Number(
                     this.connectedUsers.length,
                 )} registered users connected.`,
             );
@@ -32,7 +32,7 @@ export default class ConnectionController {
                     console.log(`Registering new user: ${name}.`);
                 }
 
-                const userInfo = myUser.info(runningGames);
+                const userInfo = User.info(myUser, runningGames);
 
                 socket.sendMessage(emitter.id, 'user', userInfo);
 
@@ -44,7 +44,7 @@ export default class ConnectionController {
 
                 if (!user) return;
 
-                if (user.isInGame()) this.updateUserId(user.name, null);
+                if (User.isInGame(user)) this.updateUserId(user.name, null);
                 else this.removeUser(user.name);
 
                 this.sendUserList(socket);
@@ -95,7 +95,7 @@ export default class ConnectionController {
     }
 
     addUser(id, name) {
-        const user = new User(id, name);
+        const user = User.create(id, name);
 
         this.connectedUsers.push(user);
 
@@ -141,7 +141,7 @@ export default class ConnectionController {
     addInvite(inviterName, targetName) {
         const target = this.getUserByName(targetName);
 
-        target.addInvite(inviterName);
+        User.addInvite(target, inviterName);
 
         return target.id;
     }
@@ -149,6 +149,6 @@ export default class ConnectionController {
     removeInvite(name, inviterName) {
         const user = this.getUserByName(name);
 
-        user.removeInvite(inviterName);
+        User.removeInvite(user, inviterName);
     }
 }

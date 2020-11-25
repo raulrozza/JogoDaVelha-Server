@@ -1,3 +1,5 @@
+import { User } from '../models';
+
 export default function lobby(connection, startGame, socket) {
     const events = [
         {
@@ -30,7 +32,7 @@ export default function lobby(connection, startGame, socket) {
 
                 const user = connection.getUserByName(name);
 
-                if (user.isInGame())
+                if (User.isInGame(user))
                     return socket.sendMessage(user.id, 'userAlreadyInGame');
 
                 startGame([name, inviterName]);

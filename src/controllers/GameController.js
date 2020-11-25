@@ -1,5 +1,5 @@
 import { game, lobby } from '../factories';
-import { Game } from '../models';
+import { Game, User } from '../models';
 import { ConnectionController } from './';
 
 export default class GameController {
@@ -67,7 +67,11 @@ export default class GameController {
     sendUserInfo(name) {
         const user = this.connection.getUserByName(name);
 
-        this.socket.sendMessage(user.id, 'user', user.info(this.runningGames));
+        this.socket.sendMessage(
+            user.id,
+            'user',
+            User.info(user, this.runningGames),
+        );
     }
 
     getActiveGame(playerName) {
@@ -107,7 +111,7 @@ export default class GameController {
 
         this.socket.sendMessage(user.id, 'endgame', {
             ...data,
-            user: user.info(this.runningGames),
+            user: User.info(user, this.runningGames),
         });
     }
 }

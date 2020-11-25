@@ -1,40 +1,42 @@
-const info = function (gameList) {
-    const userInfo = {
-        inGame: this.isInGame(),
-        gameInvites: this.gameInvites,
-    };
+const User = {
+    create(id, name) {
+        return {
+            id,
+            name,
+            gameId: null,
+            gameInvites: [],
+        };
+    },
 
-    if (this.gameId) {
-        const game = gameList.find(game => game.id === this.gameId);
+    info(user, gameList) {
+        const userInfo = {
+            inGame: User.isInGame(user),
+            gameInvites: user.gameInvites,
+        };
 
-        userInfo.playerTurn = game.playerTurn;
-        userInfo.gameBoard = game.gameBoard;
-        userInfo.playerType = game.getPlayerType(this.name);
-    }
+        if (user.gameId) {
+            const game = gameList.find(game => game.id === user.gameId);
 
-    return userInfo;
+            userInfo.playerTurn = game.playerTurn;
+            userInfo.gameBoard = game.gameBoard;
+            userInfo.playerType = game.getPlayerType(user.name);
+        }
+
+        return userInfo;
+    },
+
+    isInGame(user) {
+        return Boolean(user.gameId);
+    },
+
+    addInvite(user, name) {
+        user.gameInvites.push(name);
+    },
+
+    removeInvite(user, name) {
+        const index = user.gameInvites.findIndex(invite => invite === name);
+        user.gameInvites.splice(index);
+    },
 };
 
-export default class User {
-    constructor(id, name) {
-        this.id = id;
-        this.name = name;
-        this.gameId = null;
-        this.gameInvites = [];
-
-        this.info = info.bind(this);
-    }
-
-    isInGame() {
-        return Boolean(this.gameId);
-    }
-
-    addInvite(name) {
-        this.gameInvites.push(name);
-    }
-
-    removeInvite(name) {
-        const index = this.gameInvites.findIndex(invite => invite === name);
-        this.gameInvites.splice(index);
-    }
-}
+export default User;
